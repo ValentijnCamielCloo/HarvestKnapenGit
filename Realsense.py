@@ -25,6 +25,8 @@ Keyboard:
     [q\ESC] Quit
 """
 
+#xx
+
 import math
 import time
 import cv2
@@ -37,7 +39,7 @@ class AppState:
         self.WIN_NAME = 'RealSense'
         self.pitch, self.yaw = math.radians(-10), math.radians(-15)
         self.translation = np.array([0, 0, -1], dtype=np.float32)
-        self.distance = 2
+        self.distance = 1
         self.prev_mouse = 0, 0
         self.mouse_btns = [False, False, False]
         self.paused = False
