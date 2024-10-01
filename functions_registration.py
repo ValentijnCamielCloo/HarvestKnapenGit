@@ -37,10 +37,10 @@ def preprocess_point_cloud(pcd, voxel_size):
 def execute_global_registration(source_down, target_down, source_fpfh,
                                 target_fpfh, voxel_size):
     distance_threshold = voxel_size * 1.5
-    print(":: RANSAC registration on downsampled point clouds.")
-    print("   Since the downsampling voxel size is %.3f," % voxel_size)
+    # print(":: RANSAC registration on downsampled point clouds.")
+    # print("   Since the downsampling voxel size is %.3f," % voxel_size)
     print("   we use a liberal distance threshold %.3f." % distance_threshold)
-    result = o3d.pipelines.registration.registration_ransac_based_on_feature_matching(
+    reg_global = o3d.pipelines.registration.registration_ransac_based_on_feature_matching(
         source_down, target_down, source_fpfh, target_fpfh, True,
         distance_threshold,
         o3d.pipelines.registration.TransformationEstimationPointToPoint(False),
@@ -50,25 +50,28 @@ def execute_global_registration(source_down, target_down, source_fpfh,
             o3d.pipelines.registration.CorrespondenceCheckerBasedOnDistance(
                 distance_threshold)
         ], o3d.pipelines.registration.RANSACConvergenceCriteria(100000, 0.999))
-    print(result.transformation)
-    return result
+    print("global registration: ", reg_global)
+    return reg_global
 
-# def icp_local(source, target, threshold, trans_global, type="PointToPlane"):
-#     if type == "PointToPlane":
-#         print("Apply point-to-plane ICP")
-#         # Registration Point to Plane:registration::TransformationEstimationPointToPlane
-#         reg_p2p = o3d.pipelines.registration.registration_icp(
-#             source, target, threshold, trans_global,
-#             o3d.pipelines.registration.TransformationEstimationPointToPlane())
-#
-#     else:
-#         print("Apply point-to-point ICP")
-#         # Registration Point to Plane:registration::TransformationEstimationPointToPoint
-#         reg_p2p = o3d.pipelines.registration.registration_icp(
-#             source, target, threshold, trans_init,
-#             o3d.pipelines.registration.TransformationEstimationPointToPoint())
-#
-#     print(reg_p2p)
-#     print("Transformation is:")
-#     print(reg_p2p.transformation)
-#     return reg_p2p
+def execute_local_registration(source_down, target_down, voxel_size, trans_init, type="PointToPlane"):
+    # Smaller threshold will make it more accurate
+    threshold = voxel_size * 0.5
+    if type == "PointToPlane":
+        print("Apply point-to-plane ICP")
+        # Registration Point to Plane:registration::TransformationEstimationPointToPlane
+        reg_local = o3d.pipelines.registration.registration_icp(
+            source_down, target_down, threshold, trans_init.transformation,
+            o3d.pipelines.registration.TransformationEstimationPointToPlane())
+    else:
+        print("Apply point-to-point ICP")
+        # Registration Point to Plane:registration::TransformationEstimationPointToPoint
+        reg_local = o3d.pipelines.registration.registration_icp(
+            source_down, target_down, threshold, trans_init,
+            o3d.pipelines.registration.TransformationEstimationPointToPoint())
+    print("local registration: ", reg_local)
+    return reg_local
+
+def evaluation_registration(source_down, target_down, threshold, result_reg):
+    evaluation = o3d.pipelines.registration.evaluate_registration(
+        source_down, target_down, threshold, result_reg.transformation)
+    print("Evaluation: ",evaluation)

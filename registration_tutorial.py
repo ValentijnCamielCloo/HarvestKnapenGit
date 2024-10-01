@@ -18,7 +18,7 @@ def draw_registration_result(source, target, transformation):
     # Use Open3D's built-in visualization to display the point clouds
     o3d.visualization.draw_geometries([source_temp, target_temp])
 
-# # Define an initial transformation matrix
+# Define an initial transformation matrix
 trans_init = np.asarray([[0.0, 0.0, 1.0, 0.0], [1.0, 0.0, 0.0, 0.0],
                              [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0]])
 
@@ -28,7 +28,7 @@ source = o3d.io.read_point_cloud(demo_pcds.paths[0])
 target = o3d.io.read_point_cloud(demo_pcds.paths[1])
 
 # Visualize the source and target point clouds with the initial transformation
-# draw_registration_result(source, target, trans_init)
+draw_registration_result(source, target, trans_init)
 
 source.transform(trans_init)
 # draw_registration_result(source, target, np.identity(4))
@@ -77,7 +77,7 @@ trans_global = execute_global_registration(source_down, target_down,
                                             source_fpfh, target_fpfh,
                                             voxel_size)
 print("trans_global: ",trans_global)
-# draw_registration_result(source_down, target_down, result_ransac.transformation)
+draw_registration_result(source_down, target_down, trans_global.transformation)
 
 # threshold (=max_correspondence_distance) = maximum correspondence point-par distance
 threshold=0.02
@@ -113,7 +113,7 @@ print("Reg_p2p: ", reg_p2p)
 # print(reg_p2p.transformation)
 #
 # trans_local = icp_local(source, target, threshold, result_ransac)
-# draw_registration_result(source_down, target_down, reg_p2p.transformation)
+draw_registration_result(source_down, target_down, reg_p2p.transformation)
 
 # threshold=0.02
 # print("Local alignment")
