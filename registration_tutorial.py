@@ -77,7 +77,7 @@ trans_global = execute_global_registration(source_down, target_down,
                                             source_fpfh, target_fpfh,
                                             voxel_size)
 print("trans_global: ",trans_global)
-draw_registration_result(source_down, target_down, trans_global.transformation)
+draw_registration_result(source, target, trans_global.transformation)
 
 # threshold (=max_correspondence_distance) = maximum correspondence point-par distance
 threshold=0.02
@@ -113,7 +113,7 @@ print("Reg_p2p: ", reg_p2p)
 # print(reg_p2p.transformation)
 #
 # trans_local = icp_local(source, target, threshold, result_ransac)
-draw_registration_result(source_down, target_down, reg_p2p.transformation)
+draw_registration_result(source, target, reg_p2p.transformation)
 
 # threshold=0.02
 # print("Local alignment")
