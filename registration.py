@@ -34,6 +34,9 @@ cl, ind = source_down.remove_statistical_outlier(nb_neighbors=20,
 # display_inlier_outlier(source_down, ind)
 source_inlier_cloud = source_down.select_by_index(ind)
 # o3d.visualization.draw_geometries([source_inlier_cloud])
+point = np.asarray(source_inlier_cloud.points)
+print("Points:", point)
+print('hoi')
 
 print("Statistical oulier removal: Target")
 cl, ind = target_down.remove_statistical_outlier(nb_neighbors=20,
@@ -42,18 +45,18 @@ cl, ind = target_down.remove_statistical_outlier(nb_neighbors=20,
 target_inlier_cloud = target_down.select_by_index(ind)
 # o3d.visualization.draw_geometries([target_inlier_cloud])
 
-o3d.visualization.draw_geometries([source_down, target_down])
+# o3d.visualization.draw_geometries([source_down, target_down])
 
 # Global registration to get the initial alignment
 trans_global = execute_global_registration(source_down, target_down,
                                             source_fpfh, target_fpfh,
                                             voxel_size)
 
-draw_registration_result(source_down, target_down, trans_global.transformation)
+# draw_registration_result(source_down, target_down, trans_global.transformation)
 
 # Local registration for fine-tuning alignment (ICP)
 threshold = 0.05
 trans_local = execute_local_registration(source_down, target_down,
                                          voxel_size, trans_global)
 
-draw_registration_result(source_down, target_down, trans_local.transformation)
+# draw_registration_result(source_down, target_down, trans_local.transformation)

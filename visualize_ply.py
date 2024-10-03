@@ -11,28 +11,39 @@ folder_path = r'C:\Users\sarah\PycharmProjects\CoreKnapenGit\out_01-10'
 ply_file_1 = os.path.join(folder_path, "point_cloud_20241001_132244.ply")
 ply_file_2 = os.path.join(folder_path, "point_cloud_20241001_132325.ply")
 # ply_file_3 = os.path.join(folder_path, "point_cloud_20241001_132506.ply")
+pcd = o3d.io.read_point_cloud(ply_file_1)
 
-# Create a plotter object for visualization
-plotter = pv.Plotter()
+o3d.visualization.draw_geometries([pcd])
+# o3d.visualization.draw_geometries_with_editing([pcd])
+# o3d.visualization.draw_geometries_with_vertex_selection([pcd])
 
-# Function to load point cloud
-def load_point_cloud(ply_file):
-    return pv.read(ply_file)
+# # Create a plotter object for visualization
+# plotter = pv.Plotter()
+#
+# # Function to load point cloud
+# def load_point_cloud(ply_file):
+#     return pv.read(ply_file)
+#
+# # Load the first point cloud
+# point_cloud_1 = load_point_cloud(ply_file_1)
 
-# Load the first point cloud
-point_cloud_1 = load_point_cloud(ply_file_1)
+# # Load the second point cloud
+# point_cloud_2 = load_point_cloud(ply_file_2)
+# # point_cloud_3 = load_point_cloud(ply_file_3)
+# # Add the first point cloud (yellow)
+# plotter.add_points(point_cloud_1, render_points_as_spheres=True, point_size=5, color='yellow', label='Point Cloud 1')
+#
+# # Add the second point cloud (red)
+# plotter.add_points(point_cloud_2, render_points_as_spheres=True, point_size=5, color='red', label='Point Cloud 2')
+# # plotter.add_points(point_cloud_3, render_points_as_spheres=True, point_size=5, color='green', label='Point Cloud 3')
+#
+# # Set the title and show the plot
+# plotter.set_background("white")  # Set background color
+# plotter.add_legend()  # Show legend for point clouds
+# plotter.show()  # Display the plot
 
-# Load the second point cloud
-point_cloud_2 = load_point_cloud(ply_file_2)
-# point_cloud_3 = load_point_cloud(ply_file_3)
-# Add the first point cloud (yellow)
-plotter.add_points(point_cloud_1, render_points_as_spheres=True, point_size=5, color='yellow', label='Point Cloud 1')
-
-# Add the second point cloud (red)
-plotter.add_points(point_cloud_2, render_points_as_spheres=True, point_size=5, color='red', label='Point Cloud 2')
-# plotter.add_points(point_cloud_3, render_points_as_spheres=True, point_size=5, color='green', label='Point Cloud 3')
-
-# Set the title and show the plot
-plotter.set_background("white")  # Set background color
-plotter.add_legend()  # Show legend for point clouds
-plotter.show()  # Display the plot
+# Setting higher precision for printing
+np.set_printoptions(precision=6, suppress=True)
+print(np.asarray(pcd.points))
+# npy_pts = pcd.point.positions.numpy()
+# print(npy_pts)
