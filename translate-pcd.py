@@ -4,28 +4,20 @@ import os
 from functions_registration import *
 import copy
 
-# Define the folder path where your PLY files are stored
-folder_path = r'C:\Users\sarah\PycharmProjects\CoreKnapenGit\out_01-10'
+# Define the folder path where your PLY files are stored and where the filtered PLY will be saved
+input_folder = r'C:\Users\sarah\PycharmProjects\CoreKnapenGit\filtered_point_clouds'
+output_folder = r'C:\Users\sarah\PycharmProjects\CoreKnapenGit\translated_point_clouds'
 
-# Specify the PLY file names
-path = os.path.join(folder_path, "point_cloud_20241001_132244.ply")
+os.makedirs(output_folder, exist_ok=True)  # Create the output folder if it doesn't exist
 
-# Read the point cloud with Open3D
-pcd = o3d.io.read_point_cloud(path)
+# Specify the PLY file name to load
+ply_file_path = os.path.join(input_folder, "filtered_point_cloud.ply")
 
-# Outlier removal
-print("Statistical outlier removal")
-cl, ind = pcd.remove_statistical_outlier(nb_neighbors=20, std_ratio=5.0)
-
-# Select inliers only
-inlier_pcd = pcd.select_by_index(ind)
-
-# Downsample the point cloud with Voxel Downsampling
-voxel_size = 0.01
-pcd_down, source_fpfh = preprocess_point_cloud(inlier_pcd, voxel_size)
+# Step 1: Load the point cloud from the PLY file
+pcd = o3d.io.read_point_cloud(ply_file_path)
 
 # Make a deep copy of the point cloud for 2D conversion
-pcd_2d = copy.deepcopy(pcd_down)
+pcd_2d = copy.deepcopy(pcd)
 
 # Convert the points of the point cloud to a NumPy array
 point = np.asarray(pcd_2d.points)
@@ -38,13 +30,6 @@ pcd_2d.points = o3d.utility.Vector3dVector(point)
 
 # Print the modified points
 print("Points converted to 2D: ", np.asarray(pcd_2d.points))
-
-# Optionally visualize the result
-o3d.visualization.draw_geometries([pcd_2d])
-
-# Define the folder path where the translated PLY file will be saved
-output_folder = r'C:\Users\sarah\PycharmProjects\CoreKnapenGit\translated_point_clouds'
-os.makedirs(output_folder, exist_ok=True)  # Create the folder if it doesn't exist
 
 # Step 1: Convert the points of the point cloud to a NumPy array
 points = np.asarray(pcd_2d.points)
@@ -73,7 +58,7 @@ pcd_2d.points = o3d.utility.Vector3dVector(points)
 o3d.visualization.draw_geometries([pcd_2d])
 
 # Step 7: Save the translated point cloud to a new PLY file
-output_file = os.path.join(output_folder, "translated_point_cloud_with_corner.ply")
+output_file = os.path.join(output_folder, "translated_pcd.ply")
 o3d.io.write_point_cloud(output_file, pcd_2d)
 
 print(f"Translation complete. The point cloud has been saved to: {output_file}")
