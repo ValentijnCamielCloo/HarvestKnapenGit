@@ -5,7 +5,7 @@ import os
 
 def filter_pcd(input_name, output_name, lowest_threshold, highest_threshold, voxel_size=0.02, nb_neighbors=20, std_ratio=0.2):
     # Define the folder path where your PLY files are stored and where the filtered PLY will be saved
-    input_folder = r'C:\Users\sarah\PycharmProjects\CoreKnapenGit\out_01-10'
+    input_folder = r'C:\Users\sarah\PycharmProjects\CoreKnapenGit\scans'
     output_folder = r'C:\Users\sarah\PycharmProjects\CoreKnapenGit\filtered_point_clouds'
 
     os.makedirs(output_folder, exist_ok=True)  # Create the output folder if it doesn't exist
@@ -57,3 +57,11 @@ def filter_pcd(input_name, output_name, lowest_threshold, highest_threshold, vox
 
     print(f"Filtered point cloud saved to: {output_file}")
 
+# filter_pcd('out1_08-10', 'filtered_pcd1_08-10', -0.50, -0.35,0.01)
+
+
+# input_folder = r'C:\Users\sarah\PycharmProjects\CoreKnapenGit\scans'
+# ply_file_path = os.path.join(input_folder, "out1_08-10.ply")
+# pcd = o3d.io.read_point_cloud(ply_file_path)
+# points = np.asarray(pcd.points)
+# o3d.visualization.draw_geometries([pcd])
