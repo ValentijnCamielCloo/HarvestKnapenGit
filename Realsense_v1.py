@@ -241,7 +241,7 @@ def pointcloud(out, verts, texcoords, color, painter=True):
     distances = np.linalg.norm(verts, axis=1)
     
     # Create a mask to filter out points at a distance of 2 meters or more THIS ONLY WORKS IN THE VISUALIZER NOT THE EXPORT
-    mask = distances < 1.0  # Keep points that are less than 2 meters
+    mask = distances < 2.0  # Keep points that are less than 2 meters
 
     # Apply the mask to the vertices and texture coordinates
     verts = verts[mask]
@@ -295,20 +295,32 @@ if not os.path.exists(output_dir):
 
 #ADDED 
 
-def save_filtered_ply(filename, vertices, texcoords):
-    with open(filename, 'w') as ply_file:
-        ply_file.write('ply\n')
-        ply_file.write('format ascii 1.0\n')
-        ply_file.write(f'element vertex {len(vertices)}\n')
-        ply_file.write('property float x\n')
-        ply_file.write('property float y\n')
-        ply_file.write('property float z\n')
-        ply_file.write('property float u\n')
-        ply_file.write('property float v\n')
-        ply_file.write('end_header\n')
+def save_filtered_ply(filename, vertices, texcoords, colors=None):
+    with open(filename, 'w') as f:
+        # Write PLY header
+        f.write("ply\n")
+        f.write("format ascii 1.0\n")
+        f.write("element vertex {}\n".format(len(vertices)))
+        f.write("property float x\n")
+        f.write("property float y\n")
+        f.write("property float z\n")
 
-        for vert, tex in zip(vertices, texcoords):
-            ply_file.write(f'{vert[0]} {vert[1]} {vert[2]} {tex[0]} {tex[1]}\n')
+        # Check if colors are provided and write accordingly
+        if colors is not None:
+            f.write("property uchar red\n")
+            f.write("property uchar green\n")
+            f.write("property uchar blue\n")
+        
+        f.write("end_header\n")
+ 
+        # Write vertex and color data
+        for i in range(len(vertices)):
+            f.write("{} {} {}".format(vertices[i][0], vertices[i][1], vertices[i][2]))
+            if colors is not None:
+                r, g, b = colors[i]
+                f.write(" {} {} {}\n".format(int(r), int(g), int(b)))
+            else:
+                f.write("\n")
 #ADDED
 
 
@@ -348,17 +360,49 @@ while True:
         texcoords = np.asanyarray(t).view(np.float32).reshape(-1, 2)  # uv
         
         #ADDED 
-
-        # After pointcloud data to arrays section
-        verts = np.asanyarray(v).view(np.float32).reshape(-1, 3)  # xyz
-        texcoords = np.asanyarray(t).view(np.float32).reshape(-1, 2)  # uv
-
+        color_data = np.asanyarray(color_frame.get_data()).reshape(-1, 3)
         # Calculate distances and filter points
         distances = np.linalg.norm(verts, axis=1)
-        mask = distances < 0.5  # Keep points that are less than 1 meter
+        mask = distances < 2  # Keep points that are less than 1 meter
+        
+        # Convert texcoords to pixel positions in the color image
+        cw, ch = color_frame.get_width(), color_frame.get_height()  # Assuming 1920x1080
+        u, v = texcoords[:, 0], texcoords[:, 1]
+        u = np.clip(u * cw, 0, cw - 1).astype(np.int32)
+        v = np.clip(v * ch, 0, ch - 1).astype(np.int32)
+
+        # Use texcoords to map verts to corresponding colors from the color frame
+        colors = color_data[v * cw + u]  # This maps the 3D points to their color values
+
+
+        #DEBUGGING
+        # Before filtering vertices and texture coordinates, let's add debug statements
+        print(f"Shape of verts: {verts.shape}")
+        print(f"Shape of texcoords: {texcoords.shape}")
+        print(f"Shape of color_data: {color_data.shape}")
+        print(f"Length of mask: {len(mask)}, Sum of mask (filtered points): {np.sum(mask)}")
+        #DEBUGGING
+
+        # Apply mask to verts and texcoords as before
+        
         verts_filtered = verts[mask]
         texcoords_filtered = texcoords[mask]
+        colors_filtered = colors[mask]
+        #colors_filtered = color_data[:len(verts)][mask]
 
+        # Here is where the issue is likely happening.
+        # The shape of color_data must match the number of verts.
+        # We need to debug this by comparing shapes directly.
+        # Uncomment the following debug line:
+
+        print(f"Mask: {mask}")
+        print(f"Filtered Verts Shape: {verts_filtered.shape}")
+        print(f"Filtered texcoords shape: {texcoords_filtered.shape}")
+        print(f"Filtered colors filtered shape: {colors_filtered.shape}")
+
+        # Commented problematic line - colors_filtered seems to not match the shape correctly:
+        # The correct approach depends on what color_data represents (RGB values).
+        # Let's first ensure color_data is properly aligned to verts, then we can filter it as needed.
         #ADDED 
 
 
@@ -414,9 +458,21 @@ while True:
         cv2.imwrite('./out.png', out)
 
     if key == ord("e"):
-        # Get the number of existing PLY files to adjust the scan number automatically
-        existing_files = [f for f in os.listdir(output_dir) if f.endswith(".ply")]
-        scan_number = len(existing_files) + 1  # Start from the next available number
+        # Get existing filtered PLY files
+        filtered_files = [f for f in os.listdir(output_dir) if f.endswith("_filtered.ply")]
+
+        # Extract scan numbers and find the maximum
+        scan_numbers = []
+        for f in filtered_files:
+            parts = f.split('_')
+            if len(parts) > 1 and parts[1].isdigit():
+                scan_numbers.append(int(parts[1]))
+
+        # Determine the next scan number
+        if scan_numbers:
+            scan_number = max(scan_numbers) + 1
+        else:
+            scan_number = 1  # Start from 1 if no existing files
 
         # Get the current date and time in the desired format
         current_date = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -435,9 +491,12 @@ while True:
 
         # Save the filtered vertices and texture coordinates
         print(f"Exporting filtered {filtered_filename} .... ")
-        save_filtered_ply(full_filtered_path, verts_filtered, texcoords_filtered)
+        # Save the filtered vertices and texture coordinates
+        # save_filtered_ply(full_filtered_path, verts_filtered, texcoords_filtered, colors_filtered)
+        save_filtered_ply(full_filtered_path, verts_filtered, texcoords_filtered, colors_filtered)
 
 
+    
     if key in (27, ord("q")) or cv2.getWindowProperty(state.WIN_NAME, cv2.WND_PROP_AUTOSIZE) < 0:
         break
 
